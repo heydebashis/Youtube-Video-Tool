@@ -1,0 +1,159 @@
+/* styles.css */
+
+:root {
+  --clr-bg: #f0f2f7;
+  --clr-card: #ffffff;
+  --clr-primary: #4f46e5;
+  --clr-primary-light: #6366f1;
+  --clr-text: #333333;
+  --clr-muted: #666666;
+  --clr-border: #e5e7eb;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: var(--clr-bg);
+  color: var(--clr-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.container {
+  width: 90%;
+  max-width: 900px;
+  margin: 2rem auto;
+  flex: 1;
+}
+
+.card {
+  background: var(--clr-card);
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+  padding: 2rem;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  color: var(--clr-primary);
+}
+
+.form-group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+input, select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--clr-border);
+  border-radius: 0.5rem;
+  font-size: 1rem;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--clr-primary);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+}
+
+label {
+  position: absolute;
+  top: 0; left: 1rem;
+  padding: 0 .25rem;
+  background: var(--clr-card);
+  transform: translateY(-50%);
+  font-size: 0.85rem;
+  color: var(--clr-muted);
+}
+
+.row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.col-half {
+  flex: 1 1 45%;
+  min-width: 200px;
+}
+
+button#go {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--clr-primary);
+  color: #fff;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+button#go:hover {
+  background: var(--clr-primary-light);
+}
+
+#spinner {
+  display: none;
+  margin: 1rem auto;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+  border-width: .3rem;
+}
+
+#status {
+  text-align: center;
+  margin: 1rem 0;
+  color: var(--clr-primary);
+}
+
+#videoContainer {
+  margin-bottom: 1.5rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: #000;
+}
+
+#videoContainer iframe {
+  width: 100%;
+  height: 360px;
+  border: 0;
+}
+
+video#preview {
+  width: 100%;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+#downloadLink {
+  display: block;
+  text-align: center;
+  margin: 1rem 0;
+  color: var(--clr-primary);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#downloadLink:hover {
+  text-decoration: underline;
+}
+
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: var(--clr-muted);
+}

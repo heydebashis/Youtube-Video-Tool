@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Youtube Video Tool</title>
+  <link rel="icon" type="image/x-icon" href="src/fav-icon.svg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* BACKGROUND IMAGE */
+    body {
+      @apply flex flex-col min-h-screen m-0;
+      position: relative;
+      background: none;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-color: antiquewhite;
+      background-image: url("src/bg-image.jpg") center/cover no-repeat;
+      opacity: 0.75;
+      z-index: -3;
+    }
+
+    /* DRAW CANVAS & LAYERING */
+    #drawCanvas {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      cursor: crosshair;
+    }
+    #card,
+    footer {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* FLOATING LABELS */
+    .form-label {
+      @apply absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 transition-all pointer-events-none;
+    }
+    .form-input:focus + .form-label,
+    .form-input:not(:placeholder-shown) + .form-label {
+      @apply -translate-y-6 text-xs text-indigo-600;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- DRAW CANVAS -->
+  <canvas id="drawCanvas"></canvas>
+
+  <main class="flex w-screen items-center justify-center p-4">
+    <div id="card" class="mx-auto bg-white rounded-2xl shadow-lg w-full max-w-md p-6 space-y-6">
+
+      <h1 class="text-2xl font-semibold text-center text-indigo-600">
+        🎬 Make a Preview
+      </h1>
+
+      <!-- URL Input -->
+      <div class="relative">
+        <input id="url" type="url" placeholder=" "
+               class="form-input peer w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"/>
+        <label for="url" class="form-label">Video URL (YouTube only)</label>
+      </div>
+
+      <!-- YouTube preview container -->
+      <div id="videoContainer" class="relative rounded-lg overflow-hidden bg-black aspect-video max-h-0 opacity-0 transition-all duration-500"></div>
+
+      <!-- Download Original Link -->
+      <a id="dlOriginal" class="block text-center text-indigo-600 font-semibold underline hidden" download="video.mp4">
+        Download Original Video
+      </a>
+
+      <!-- Start time & Duration -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="relative">
+          <input id="ts" type="text" placeholder=" "
+                 class="form-input peer w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"/>
+          <label for="ts" class="form-label">Start time (mm:ss)</label>
+        </div>
+        <div class="relative">
+          <input id="duration" type="number" min="1" value="4" placeholder=" "
+                 class="form-input peer w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"/>
+          <label for="duration" class="form-label">Duration (sec)</label>
+        </div>
+      </div>
+
+      <!-- Max file size & Unit -->
+      <div>
+        <label class="block text-sm text-gray-600 mb-1">Max file size</label>
+        <div class="grid grid-cols-3 gap-4">
+          <input id="maxsize" type="number" min="1" value="600"
+                 class="border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200"/>
+          <select id="unit" class="border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200">
+            <option>KB</option>
+            <option>MB</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Resolution & Audio -->
+      <div class="grid grid-cols-2 gap-4 items-center">
+        <div>
+          <label for="resolution" class="block text-sm text-gray-600 mb-1">Resolution</label>
+          <select id="resolution" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-200">
+            <option value="360">360p</option>
+            <option value="480">480p</option>
+            <option value="720">720p</option>
+            <option value="1080">1080p</option>
+          </select>
+        </div>
+        <div class="flex items-center space-x-2">
+          <input id="includeAudio" type="checkbox" class="h-5 w-5 text-indigo-600 rounded focus:ring-indigo-500"/>
+          <label for="includeAudio" class="text-gray-700">Include Audio</label>
+        </div>
+      </div>
+
+      <!-- Cut Preview Button -->
+      <button id="go" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition">
+        Cut Preview
+      </button>
+
+      <!-- Spinner -->
+      <div id="spinner" class="flex justify-center" style="display:none;">
+        <svg class="animate-spin h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+        </svg>
+      </div>
+
+      <!-- Status -->
+      <div id="status" class="text-center text-indigo-600 min-h-[1.5rem]"></div>
+
+      <!-- Preview Clip -->
+      <video id="preview" controls class="w-full rounded-lg aspect-video max-h-0 opacity-0 transition-all duration-500"></video>
+
+      <!-- Download Preview -->
+      <a id="downloadLink" class="block text-center text-indigo-600 font-semibold underline hidden" download="preview.mp4">
+        Download Preview
+      </a>
+    </div>
+  </main>
+
+  <footer class="text-center text-gray-500 text-sm py-4">
+    A fun project by <a href="https://x.com/heydebashis" class="text-indigo-600 hover:underline" target="_blank">@Deb</a>
+  </footer>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const canvas = document.getElementById("drawCanvas");
+    Object.assign(canvas.style, { position: "fixed", inset: 0, zIndex: 5, pointerEvents: "auto", cursor: "crosshair" });
+    const card = document.getElementById("card");
+    Object.assign(card.style, { position: "relative", zIndex: 10 });
+    const footer = document.querySelector("footer");
+    Object.assign(footer.style, { position: "relative", zIndex: 10 });
+
+    const ctx = canvas.getContext("2d");
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener("resize", resize); resize();
+
+    let mode = "draw", color = "#333", drawing = false, lastX = 0, lastY = 0;
+    function updateCursor() {
+      const svg = mode === "draw"
+        ? `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><path d='M12 20h9' stroke='${color}' stroke-width='2' stroke-linecap='round'/><path d='M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z' fill='${color}'/></svg>`
+        : `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><path d='M2 14l6 6L22 6l-6-6z' fill='#fff' stroke='${color}' stroke-width='2'/></svg>`;
+      const uri = `data:image/svg+xml;base64,${btoa(svg)}`;
+      canvas.style.cursor = `url(${uri}) 0 24, auto`;
+    }
+    updateCursor();
+
+    canvas.addEventListener("mousedown", e => { drawing = true; lastX = e.clientX; lastY = e.clientY; });
+    canvas.addEventListener("mousemove", e => {
+      if (!drawing) return;
+      if (mode === "draw") {
+        ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.lineCap = "round";
+        ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(e.clientX, e.clientY); ctx.stroke();
+      } else {
+        ctx.clearRect(e.clientX - 10, e.clientY - 10, 20, 20);
+      }
+      lastX = e.clientX; lastY = e.clientY;
+    });
+    ["mouseup", "mouseout"].forEach(ev => canvas.addEventListener(ev, () => drawing = false));
+
+    const toolbar = document.createElement("div");
+    Object.assign(toolbar.style, { position: "fixed", bottom: "16px", left: "16px", display: "flex", gap: "8px", background: "rgba(255,255,255,0.8)", padding: "8px", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0,0,0,0.1)", zIndex: 6 });
+    ["#333","#e63946","#457b9d","#2a9d8f","#f4a261"].forEach(c => {
+      const sw = document.createElement("button");
+      sw.style.cssText = `width:24px;height:24px;border-radius:50%;background:${c};border:none;cursor:pointer;`;
+      sw.onclick = () => { color = c; mode = "draw"; updateCursor(); };
+      toolbar.appendChild(sw);
+    });
+    const eraserBtn = document.createElement("button");
+    eraserBtn.innerHTML = `<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><path d='M2 14l6 6L22 6l-6-6z' fill='#fff' stroke='#333' stroke-width='2'/></svg>`;
+    Object.assign(eraserBtn.style, { background: "white", border: "1px solid #ccc", padding: "4px", borderRadius: "4px", cursor: "pointer" });
+    eraserBtn.onclick = () => { mode = "erase"; updateCursor(); };
+    toolbar.appendChild(eraserBtn);
+    const eraseAllBtn = document.createElement("button");
+    eraseAllBtn.textContent = "Clear All";
+    Object.assign(eraseAllBtn.style, { background: "#dc2626", color: "#fff", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer" });
+    eraseAllBtn.onclick = () => ctx.clearRect(0, 0, canvas.width, canvas.height);
+    toolbar.appendChild(eraseAllBtn);
+    document.body.appendChild(toolbar);
+
+    // PREVIEW / DOWNLOAD LOGIC
+    const urlIn = document.getElementById("url"), tsIn = document.getElementById("ts"), durIn = document.getElementById("duration"), sizeIn = document.getElementById("maxsize"), unitIn = document.getElementById("unit"), resIn = document.getElementById("resolution"), audioChk = document.getElementById("includeAudio"), goBtn = document.getElementById("go"), cont = document.getElementById("videoContainer"), dlOrig = document.getElementById("dlOriginal"), spinner = document.getElementById("spinner"), status = document.getElementById("status"), preview = document.getElementById("preview"), dl = document.getElementById("downloadLink");
+    const resBps = {360:500,480:1000,720:2000,1080:4000};
+    function updateSizeFromRes(){ const d=+durIn.value||4, v=(resBps[+resIn.value]*1000)/8, a=audioChk.checked?(64*1000)/8:0, b=(v+a)*d; if(b>=1024*1024){ sizeIn.value=(b/(1024*1024)).toFixed(1); unitIn.value="MB";} else { sizeIn.value=Math.ceil(b/1024); unitIn.value="KB";} }
+    function updateResFromSize(){ const d=+durIn.value||4,s=+sizeIn.value||600,b=s*(unitIn.value==="MB"?1024*1024:1024),a=audioChk.checked?(64*1000)/8:0,v=Math.max(0,(b/d)-a),k=(v*8)/1000; let best=360, diff=Infinity; Object.entries(resBps).forEach(([r,br])=>{ const dd=Math.abs(br-k); if(dd<diff){ diff=dd; best=r; } }); resIn.value=best; }
+    durIn.addEventListener("input",updateSizeFromRes);
+    resIn.addEventListener("input",updateSizeFromRes);
+    sizeIn.addEventListener("input",updateResFromSize);
+    unitIn.addEventListener("change",updateResFromSize);
+    audioChk.addEventListener("change",()=>{ updateSizeFromRes(); updateResFromSize(); });
+    updateSizeFromRes();
+    function embedVid(){ const m=urlIn.value.trim().match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/); if(m){ cont.innerHTML=`<iframe class="w-full h-full" src="https://www.youtube.com/embed/${m[1]}" allowfullscreen></iframe>`; cont.classList.remove("max-h-0","opacity-0"); cont.classList.add("max-h-[360px]","opacity-100"); dlOrig.href=`/download-original?url=${encodeURIComponent(urlIn.value)}`; dlOrig.classList.remove("hidden"); } else { cont.classList.add("max-h-0","opacity-0"); dlOrig.classList.add("hidden"); } }
+    urlIn.addEventListener("blur",embedVid);
+    urlIn.addEventListener("keydown",e=>{ if(e.key==="Enter") embedVid(); });
+    goBtn.addEventListener("click",async()=>{ if(!urlIn.value||!tsIn.value){ status.textContent="⚠️ URL & time required"; return;} spinner.style.display=""; status.textContent=""; preview.classList.add("max-h-0","opacity-0"); dl.classList.add("hidden"); const params=new URLSearchParams({ url:urlIn.value, timestamp:tsIn.value, duration:durIn.value, maxsize:sizeIn.value, unit:unitIn.value, resolution:resIn.value, includeAudio:audioChk.checked?"on":"off" }); try{ const r=await fetch(`/cut?${params}`); if(!r.ok) throw new Error(await r.text()); const blob=await r.blob(), url=URL.createObjectURL(blob); preview.src=url; preview.classList.remove("max-h-0","opacity-0"); preview.classList.add("max-h-[240px]","opacity-100"); dl.href=url; dl.classList.remove("hidden"); status.textContent="✅ Done!"; }catch(e){ console.error(e); status.textContent="❌ " + e.message; }finally{ spinner.style.display="none"; } });
+  });
+  </script>
+</body>
+</html>
